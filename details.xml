@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <app>
-  <publisher>Influent</publisher>
+  <publisher>influent</publisher>
   <app>instareels-downloader</app>
   <name>InstaReels Downloader</name>
-  <version>v1.0-26.08-21.56-AlphaCube</version>
-  <correlationid>185c857b69ff9bf76f45d88bc2fd086f3a65ad89c145f2e7bfac1bc0b4fb6e49</correlationid>
+  <version>v1.0-26.08-21.56</version>
+  <correlationid>b9ddf276bc40c740ff8810b576b587f5005b326b798eeb23aa293f4d506b72bc</correlationid>
   <rate>Todas las edades</rate>
   <author>JesusQuijada34</author>
   <platform>AlphaCube</platform>
