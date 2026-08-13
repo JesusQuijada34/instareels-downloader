@@ -1,1 +1,13 @@
-<app><publisher>Influent</publisher><app>instareels-downloader</app><name>InstaReels Downloader</name><version>v1-25.08-23.30-danenone</version><with>linux</with><danenone>25.08-23.30</danenone><correlationid>e707f6e47e10c0ecbced31448d8c1f30a790201b621df057f96e94db44a36c29</correlationid><rate>Todas las edades</rate></app>
+<?xml version="1.0" encoding="UTF-8"?>
+<app>
+  <publisher>Influent</publisher>
+  <app>instareels-downloader</app>
+  <name>InstaReels Downloader</name>
+  <version>v1.0-26.08-23.43-AlphaCube</version>
+  <correlationid>49e4a1b7cda93046c99a50563e488b743364ae67c9a1fc5cc9c17935b1563e78</correlationid>
+  <rate>Todas las edades</rate>
+  <author>JesusQuijada34</author>
+  <platform>AlphaCube</platform>
+  <description>Aplicación de código fuente PyQt5 multiplataforma para descargar contenido público de Instagram mediante yt-dlp, con validación estricta de URLs y nombres de salida saneados.</description>
+  <year>2026</year>
+</app>

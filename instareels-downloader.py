@@ -1,8 +1,9 @@
 import sys
 import os
+from urllib.parse import urlsplit, urlunsplit
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QLineEdit, QFileDialog
+    QLabel, QLineEdit, QFileDialog, QMessageBox
 )
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import Qt, QUrl
@@ -81,54 +82,81 @@ class InstaReelsDownloader(QWidget):
         self.setLayout(main_layout)
 
     def capture_url(self, qurl):
-        raw_url = qurl.toString()
-        clean_url = self.format_url(raw_url)
-        self.url_field.setText(clean_url)
+        self.url_field.setText(self.format_url(qurl.toString()))
 
-    def format_url(self, url):
-        if "instagram.com/reel/" in url or "instagram.com/p/" in url or "instagram.com/tv/" in url:
-            return url.split("?")[0]
+    @staticmethod
+    def format_url(url):
+        """Return only canonical HTTPS Instagram content URLs."""
+        try:
+            parsed = urlsplit(url.strip())
+        except ValueError:
+            return ""
+        host = (parsed.hostname or "").lower().rstrip(".")
+        if parsed.scheme != "https" or host not in {"instagram.com", "www.instagram.com", "m.instagram.com"}:
+            return ""
+        parts = [part for part in parsed.path.split("/") if part]
+        if len(parts) < 2 or parts[0] not in {"reel", "p", "tv"}:
+            return ""
+        return urlunsplit(("https", "www.instagram.com", "/" + "/".join(parts[:2]), "", ""))
+
+    def selected_url(self):
+        url = self.format_url(self.url_field.text())
+        if not url:
+            QMessageBox.warning(self, "URL no válida", "Selecciona un Reel, publicación o vídeo HTTPS de Instagram.")
         return url
+
+    @staticmethod
+    def download_options(output_template, format_spec):
+        return {
+            "format": format_spec,
+            "outtmpl": output_template,
+            "noplaylist": True,
+            "restrictfilenames": True,
+            "windowsfilenames": True,
+            "max_filesize": 500 * 1024 * 1024,
+            "socket_timeout": 30,
+            "retries": 3,
+            "quiet": True,
+            "no_warnings": True,
+        }
 
     def change_path(self):
         folder = QFileDialog.getExistingDirectory(self, "Selecciona carpeta de descarga")
         if folder:
             self.download_path = folder
 
-    def get_title(self, url):
-        try:
-            with YoutubeDL({'quiet': True}) as ydl:
-                info = ydl.extract_info(url, download=False)
-                return info.get('title', 'insta_media')
-        except Exception:
-            return "insta_media"
-
     def download_audio(self):
-        url = self.url_field.text()
-        title = self.get_title(url)
-        output = os.path.join(self.download_path or str(Path.home() / "Music" / "Instagram"), f"{title}.mp3")
-        opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': output,
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-        }
-        with YoutubeDL(opts) as ydl:
-            ydl.download([url])
+        url = self.selected_url()
+        if not url:
+            return
+        destination = Path(self.download_path or Path.home() / "Music" / "Instagram")
+        destination.mkdir(parents=True, exist_ok=True)
+        output = str(destination / "%(title).180s.%(ext)s")
+        opts = self.download_options(output, "bestaudio/best")
+        opts["postprocessors"] = [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }]
+        try:
+            with YoutubeDL(opts) as ydl:
+                ydl.download([url])
+        except Exception as error:
+            QMessageBox.critical(self, "Descarga fallida", str(error)[:500])
 
     def download_video(self):
-        url = self.url_field.text()
-        title = self.get_title(url)
-        output = os.path.join(self.download_path or str(Path.home() / "Videos" / "Instagram"), f"{title}.mp4")
-        opts = {
-            'format': 'best',
-            'outtmpl': output,
-        }
-        with YoutubeDL(opts) as ydl:
-            ydl.download([url])
+        url = self.selected_url()
+        if not url:
+            return
+        destination = Path(self.download_path or Path.home() / "Videos" / "Instagram")
+        destination.mkdir(parents=True, exist_ok=True)
+        output = str(destination / "%(title).180s.%(ext)s")
+        opts = self.download_options(output, "best")
+        try:
+            with YoutubeDL(opts) as ydl:
+                ydl.download([url])
+        except Exception as error:
+            QMessageBox.critical(self, "Descarga fallida", str(error)[:500])
 
 
 if __name__ == "__main__":
